@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0E0C09">
+<title>갑자TV 우선예약</title>
+<link rel="icon" href="https://raw.githubusercontent.com/gapjatv/up/main/gapjamoney1.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0E0C09;
+    --line: #2B241B;
+    --gold: #D4A93A;
+    --text: #F2EBDA;
+    --muted: #9C9080;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;overflow-x:hidden;width:100%;}
+  body{
+    background:
+      radial-gradient(ellipse at top, rgba(212,169,58,0.07), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Noto Sans KR', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    text-size-adjust:100%;
+    -webkit-text-size-adjust:100%;
+  }
+  button, a{touch-action:manipulation;}
+  .wrap{max-width:760px;margin:0 auto;padding:44px 20px 64px;}
+  h1{
+    font-family:'Black Han Sans',sans-serif;
+    font-size:clamp(28px,6vw,40px);
+    letter-spacing:.01em;
+    margin:0 0 12px;
+    color:var(--text);
+  }
+  footer{
+    margin-top:40px;
+    text-align:center;
+    padding-top:26px;
+    border-top:1px solid var(--line);
+  }
+  footer p{color:var(--muted);font-size:12.5px;margin:4px 0;}
+  footer .ribbon{
+    font-family:'Black Han Sans',sans-serif;
+    color:var(--gold);
+    font-size:13px;
+    letter-spacing:.05em;
+  }
+  @media (max-width:560px){
+    .wrap{padding:32px 16px 48px;}
+  }
+  @media (max-width:380px){
+    .wrap{padding:26px 13px 40px;}
+  }
+</style>
+
+<!-- ===== 우선예약 위젯 전용 스타일 (페이지4 내부에만 적용되도록 범위 한정) ===== -->
+<style>
+  .priority-widget,
+  .priority-widget *,
+  .priority-widget *::before,
+  .priority-widget *::after {
+    margin:0; padding:0; -webkit-tap-highlight-color:transparent; box-sizing:border-box;
+  }
+
+  .priority-widget {
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    border-radius:22px;
+    padding:26px 14px 30px;
+    background: radial-gradient(ellipse at top, #1a1200 0%, #0d0d0d 60%);
+    color:#fff;
+    font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  }
+
+  /* 황금 파티클 배경 (위젯 내부에만 한정) */
+  .priority-widget .bg-particles {
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+    overflow:hidden;
+  }
+  .priority-widget .particle {
+    position:absolute;
+    border-radius:50%;
+    background:#ffcc00;
+    opacity:0;
+    animation: pw-float-up linear infinite;
+  }
+  @keyframes pw-float-up {
+    0% { transform: translateY(100%) scale(0); opacity:0; }
+    10% { opacity:0.4; }
+    90% { opacity:0.15; }
+    100% { transform: translateY(-110%) scale(1); opacity:0; }
+  }
+
+  .priority-widget .priority-card {
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:380px;
+    margin:0 auto;
+    background: rgba(255,255,255,0.04);
+    border:2.5px solid #ffcc00;
+    border-radius:24px;
+    padding:28px 22px 26px;
+    box-shadow:
+      0 0 30px rgba(255,204,0,0.18),
+      0 0 80px rgba(255,204,0,0.06),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+  }
+
+  .priority-widget .char-wrap { text-align:center; margin-bottom:10px; }
+  .priority-widget .char-img {
+    width:110px; height:110px;
+    object-fit:contain;
+    border-radius:50%;
+    border:3px solid #ffcc00;
+    box-shadow: 0 0 18px rgba(255,204,0,0.45);
+    cursor:pointer;
+    transition: filter .22s ease, box-shadow .22s ease, transform .15s ease;
+    filter:brightness(1);
+  }
+  .priority-widget .char-img:hover,
+  .priority-widget .char-img:active,
+  .priority-widget .char-img.touched {
+    filter: brightness(1.45) drop-shadow(0 0 12px rgba(255,204,0,0.9));
+    box-shadow: 0 0 35px rgba(255,204,0,0.75);
+    transform: scale(1.06);
+  }
+
+  .priority-widget h1.main-title {
+    text-align:center;
+    color:#ffcc00;
+    font-size:1.45rem;
+    font-weight:900;
+    letter-spacing:-0.5px;
+    margin-bottom:18px;
+    line-height:1.3;
+    text-shadow: 0 0 12px rgba(255,204,0,0.35);
+  }
+  .priority-widget h1.main-title sup { font-size:0.65em; vertical-align:super; }
+
+  .priority-widget .donate-group { display:flex; gap:10px; margin-bottom:18px; }
+  .priority-widget .donate-btn {
+    flex:1;
+    padding:13px 6px;
+    border:none;
+    border-radius:10px;
+    font-size:0.85rem;
+    font-weight:700;
+    letter-spacing:-0.3px;
+    color:#fff;
+    cursor:pointer;
+    white-space:nowrap;
+    transition: transform .1s, filter .15s;
+    line-height:1.3;
+  }
+  .priority-widget .donate-btn:active { transform:scale(0.95); }
+
+  .priority-widget .btn-toon {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    box-shadow: 0 4px 14px rgba(124,58,237,0.5);
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .priority-widget .btn-toon:hover { filter:brightness(1.12); }
+  .priority-widget .btn-toon img.toon-icon { width:18px; height:18px; object-fit:contain; flex-shrink:0; }
+
+  .priority-widget .btn-bank {
+    background: linear-gradient(135deg, #f97316 0%, #c2410c 100%);
+    box-shadow: 0 4px 14px rgba(249,115,22,0.5);
+  }
+  .priority-widget .btn-bank:hover { filter:brightness(1.12); }
+
+  .priority-widget .btn-youtube {
+    width:100%;
+    padding:13px 10px;
+    border:none;
+    border-radius:10px;
+    font-size:0.85rem;
+    font-weight:700;
+    letter-spacing:-0.3px;
+    color:#fff;
+    cursor:pointer;
+    transition: transform .1s, filter .15s;
+    line-height:1.3;
+    background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+    box-shadow: 0 4px 14px rgba(255,0,0,0.45);
+    display:flex; align-items:center; justify-content:center; gap:7px;
+    margin-bottom:18px;
+  }
+  .priority-widget .btn-youtube:active { transform:scale(0.97); }
+  .priority-widget .btn-youtube:hover { filter:brightness(1.12); }
+  .priority-widget .btn-youtube svg { flex-shrink:0; }
+
+  .priority-widget .input-group { display:flex; gap:9px; margin-bottom:16px; }
+  .priority-widget input[type="text"] {
+    flex:7; min-width:0;
+    padding:14px 12px;
+    background: rgba(255,255,255,0.07);
+    border:1.5px solid #444;
+    border-radius:10px;
+    color:#fff;
+    font-size:1rem;
+    text-align:center;
+    transition: border-color .2s;
+    outline:none;
+    -webkit-appearance:none;
+  }
+  .priority-widget input[type="text"]::placeholder { color:#666; }
+  .priority-widget input[type="text"]:focus { border-color:#ffcc00; background: rgba(255,204,0,0.05); }
+
+  .priority-widget select {
+    flex:3; min-width:0;
+    padding:14px 6px;
+    background: rgba(255,255,255,0.07);
+    border:1.5px solid #444;
+    border-radius:10px;
+    color:#ffcc00;
+    font-size:0.9rem;
+    font-weight:700;
+    text-align:center;
+    cursor:pointer;
+    outline:none;
+    -webkit-appearance:none; appearance:none;
+  }
+  .priority-widget select option { background:#222; color:#fff; }
+
+  .priority-widget .main-btn {
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:12px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+    color:#000;
+    font-size:1.15rem;
+    font-weight:900;
+    letter-spacing:0.5px;
+    cursor:pointer;
+    box-shadow: 0 5px 18px rgba(255,204,0,0.4);
+    transition: transform .1s, box-shadow .15s;
+    margin-bottom:6px;
+  }
+  .priority-widget .main-btn:active { transform:scale(0.98); box-shadow: 0 2px 8px rgba(255,204,0,0.3); }
+  .priority-widget .main-btn:disabled { background:#3a3a3a; color:#666; cursor:not-allowed; box-shadow:none; }
+
+  .priority-widget .cooldown-msg {
+    color:#ff5555;
+    font-size:0.78rem;
+    text-align:center;
+    margin-top:6px;
+    display:none;
+  }
+
+  .priority-widget .back-link {
+    text-align:center;
+    margin-top:16px;
+    font-size:0.82rem;
+    color:#777;
+    cursor:pointer;
+    text-decoration:underline;
+    transition: color .2s;
+  }
+  .priority-widget .back-link:hover { color:#ffcc00; }
+
+  .priority-widget #prioritySection,
+  .priority-widget #prioritySuccessSection { display:none; }
+
+  .priority-widget .success-wrap { text-align:center; padding:10px 0; }
+  .priority-widget .success-img {
+    width:150px; height:auto;
+    filter: drop-shadow(0 0 14px rgba(255,204,0,0.55));
+    margin-bottom:18px;
+    animation: pw-pop-in .4s ease;
+  }
+  @keyframes pw-pop-in { from{transform:scale(0.7); opacity:0;} to{transform:scale(1); opacity:1;} }
+  .priority-widget .success-title { font-size:1.6rem; font-weight:900; color:#fff; margin-bottom:8px; }
+  .priority-widget .success-sub { color:#ffcc00; font-weight:700; font-size:1.05rem; margin-bottom:10px; }
+  .priority-widget .success-msg { color:#ccc; line-height:1.65; font-size:0.92rem; margin-bottom:22px; }
+  .priority-widget .reload-btn {
+    background:#2a2a2a; color:#bbb;
+    border:1px solid #444; border-radius:10px;
+    padding:11px 28px; font-size:0.9rem;
+    cursor:pointer; transition: background .2s;
+  }
+  .priority-widget .reload-btn:hover { background:#333; color:#ffcc00; }
+
+  /* 모달 (위젯 내부 트리거로 열리지만, 화면 전체 기준 표시) */
+  .priority-widget .modal-overlay {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.72);
+    display:none; align-items:center; justify-content:center;
+    z-index:200; padding:20px;
+  }
+  .priority-widget .modal-overlay.open { display:flex; }
+  .priority-widget .modal-box {
+    background:#1a1a1a;
+    border:2px solid #ffcc00;
+    border-radius:18px;
+    padding:28px 22px 22px;
+    width:100%; max-width:310px;
+    text-align:center;
+    box-shadow: 0 0 30px rgba(255,204,0,0.3);
+    animation: pw-slide-up .25s ease;
+  }
+  @keyframes pw-slide-up { from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+  .priority-widget .modal-icon { font-size:2.4rem; margin-bottom:10px; }
+  .priority-widget .modal-title { color:#ffcc00; font-size:1.05rem; font-weight:900; margin-bottom:12px; }
+  .priority-widget .modal-account {
+    background: rgba(255,204,0,0.08);
+    border:1px solid rgba(255,204,0,0.3);
+    border-radius:10px; padding:12px;
+    color:#fff; font-size:0.95rem; font-weight:700;
+    letter-spacing:0.5px; margin-bottom:8px; word-break:break-all;
+  }
+  .priority-widget .modal-copy-tag {
+    display:inline-block; background:#ffcc00; color:#000;
+    font-size:0.72rem; font-weight:900;
+    padding:3px 10px; border-radius:20px; margin-bottom:14px;
+  }
+  .priority-widget .modal-msg { color:#bbb; font-size:0.85rem; line-height:1.55; margin-bottom:20px; }
+  .priority-widget .modal-close-btn {
+    width:100%; padding:13px;
+    background:#ffcc00; color:#000;
+    border:none; border-radius:10px;
+    font-size:1rem; font-weight:900;
+    cursor:pointer; transition: filter .15s;
+  }
+  .priority-widget .modal-close-btn:hover { filter:brightness(1.1); }
+
+  .priority-widget .confirm-modal-overlay {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.72);
+    display:none; align-items:center; justify-content:center;
+    z-index:200; padding:20px;
+  }
+  .priority-widget .confirm-modal-overlay.open { display:flex; }
+  .priority-widget .confirm-box {
+    background:#1a1a1a;
+    border:2px solid #ffcc00;
+    border-radius:18px;
+    padding:26px 22px 20px;
+    width:100%; max-width:300px;
+    text-align:center;
+    box-shadow: 0 0 30px rgba(255,204,0,0.3);
+    animation: pw-slide-up .25s ease;
+  }
+  .priority-widget .confirm-box p { color:#fff; font-size:1rem; font-weight:700; margin-bottom:20px; line-height:1.6; }
+  .priority-widget .confirm-box p span { color:#ffcc00; }
+  .priority-widget .confirm-btn-group { display:flex; gap:10px; }
+  .priority-widget .btn-cancel {
+    flex:1; padding:12px; background:#333; color:#bbb;
+    border:1px solid #444; border-radius:10px;
+    font-size:0.95rem; font-weight:700; cursor:pointer;
+  }
+  .priority-widget .btn-confirm {
+    flex:1; padding:12px; background:#ffcc00; color:#000;
+    border:none; border-radius:10px;
+    font-size:0.95rem; font-weight:900; cursor:pointer;
+  }
+
+  @media (max-width:360px){
+    .priority-widget{padding:20px 10px 24px;}
+    .priority-widget .priority-card{padding:22px 16px 20px;}
+    .priority-widget .char-img{width:92px;height:92px;}
+    .priority-widget h1.main-title{font-size:1.25rem;}
+    .priority-widget .donate-group{flex-direction:column;}
+    .priority-widget .donate-btn{font-size:0.82rem;padding:12px 8px;}
+    .priority-widget .input-group{flex-direction:column;}
+    .priority-widget input[type="text"], .priority-widget select{flex:none;width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ===== 갑자TV 후원 및 우선예약 위젯 (인라인 삽입) ===== -->
+  <div class="priority-widget" id="priorityWidget">
+
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <div class="priority-card" id="mainContainer">
+
+      <!-- 우선예약 섹션 (메인) -->
+      <div id="prioritySection" style="display:block;">
+
+        <div class="char-wrap">
+          <img
+            id="charImg"
+            src="https://raw.githubusercontent.com/gapjatv/boss-img/main/%EA%B0%91%EC%9E%90tv%EC%8B%A0_%EC%9A%B4%EB%B9%A8%EC%A1%B4%EB%A7%8E%EA%B2%9C.png"
+            class="char-img"
+            alt="갑자TV 캐릭터"
+            draggable="false"
+          >
+        </div>
+
+        <h1 class="main-title">갑자<sup>tv</sup> 후원 및 우선예약</h1>
+
+        <div class="donate-group">
+          <button class="donate-btn btn-toon" onclick="window.open('https://toon.at/donate/gapjatv', '_blank')">
+            <img class="toon-icon" src="https://toon.at/img/common/icon_toonation.png" alt="투네이션" onerror="this.style.display='none'">
+            투네이션 5,000원
+          </button>
+          <button class="donate-btn btn-bank" onclick="openBankModal()">
+            🏦 계좌후원 3,900원
+          </button>
+        </div>
+
+        <button class="btn-youtube" onclick="openYoutubeModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+          유튜브 멤버십 가입하기
+        </button>
+
+        <div class="input-group">
+          <input type="text" id="priorityNickname" placeholder="게임 닉네임 입력" autocomplete="off" autocorrect="off" spellcheck="false">
+          <select id="priorityModeSelect" onchange="checkPriorityModeSelect()">
+            <option value="" disabled selected>선택</option>
+            <option value="태초">태초</option>
+            <option value="신">신</option>
+            <option value="지옥">지옥</option>
+            <option value="하드">하드</option>
+            <option value="일반">일반</option>
+          </select>
+        </div>
+
+        <button id="prioritySubmitBtn" class="main-btn" onclick="openConfirmModal()">
+          🚀 우선예약 신청
+        </button>
+        <div id="priorityCooldownMsg" class="cooldown-msg">도배 방지를 위해 1분 후 다시 신청 가능합니다.</div>
+
+      </div>
+
+      <!-- 우선예약 완료 섹션 -->
+      <div id="prioritySuccessSection">
+        <div class="success-wrap">
+          <img src="https://tistory1.daumcdn.net/tistory/4488967/skin/images/baeteumaen.png" class="success-img" alt="완료">
+          <div class="success-title">우선예약 완료!</div>
+          <div class="success-sub">우선예약이 완료 되었습니다.</div>
+          <div class="success-msg">
+            소중한 후원 정말 감사드립니다!<br>
+            방송 화면에서 바로 확인해 드릴게요! 💖
+          </div>
+          <button class="reload-btn" onclick="resetPriorityWidget()">처음으로</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 유튜브 멤버십 안내 모달 -->
+    <div class="modal-overlay" id="youtubeModal">
+      <div class="modal-box">
+        <div class="modal-icon">🎬</div>
+        <div class="modal-title" style="color:#ff4444;">유튜브 멤버십 안내</div>
+        <div style="background:rgba(255,68,68,0.08); border:1px solid rgba(255,68,68,0.3); border-radius:10px; padding:14px; margin-bottom:14px;">
+          <div style="color:#ff7777; font-size:0.78rem; font-weight:700; margin-bottom:10px; letter-spacing:0.3px;">🎁 멤버십 혜택</div>
+          <div style="color:white; font-size:0.88rem; font-weight:700; line-height:2; text-align:left;">
+            🥫 <span style="color:#ffcc00;">갑자띠 캔커피 한잔해</span> <span style="color:#aaa; font-size:0.8rem;">1,390원</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;→ 시참 <span style="color:#ffcc00; font-weight:900;">5일</span> 1회 가능<br>
+            ☕ <span style="color:#ffcc00;">갑자야 라떼 한잔해</span> <span style="color:#aaa; font-size:0.8rem;">2,990원</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;→ 시참 <span style="color:#ffcc00; font-weight:900;">2일</span> 1회 가능<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;→ 라이브 채팅 <span style="color:#ffcc00; font-weight:900;">음성TTs</span> 지원<br>
+            🍲 <span style="color:#ffcc00;">갑자야 국밥한그릇해</span> <span style="color:#aaa; font-size:0.8rem;">7,990원</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;→ 시참 <span style="color:#ffcc00; font-weight:900;">1일</span> 1회 가능<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;→ 라이브 채팅 <span style="color:#ffcc00; font-weight:900;">음성TTs</span> 지원<br>
+            🍽️ <span style="color:#ffcc00;">갑자띠 가족과 식사해</span> <span style="color:#aaa; font-size:0.8rem;">30,000원</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;→ 시참 <span style="color:#ffcc00; font-weight:900;">1일</span> 2회 가능<br>
+          </div>
+        </div>
+        <div class="modal-msg" style="margin-bottom:18px;">유튜브 멤버십 페이지로 이동합니다.<br>멤버십 가입 후 혜택을 누려보세요! 🙏</div>
+        <div style="display:flex; gap:10px;">
+          <button onclick="closeYoutubeModal()" style="flex:1; padding:12px; background:#333; color:#bbb; border:1px solid #444; border-radius:10px; font-size:0.95rem; font-weight:700; cursor:pointer;">돌아가기</button>
+          <button onclick="goToYoutube()" style="flex:1; padding:12px; background:linear-gradient(135deg,#ff0000,#cc0000); color:white; border:none; border-radius:10px; font-size:0.95rem; font-weight:900; cursor:pointer;">가입하기 →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 계좌 복사 모달 -->
+    <div class="modal-overlay" id="bankModal">
+      <div class="modal-box">
+        <div class="modal-icon">🏦</div>
+        <div class="modal-title">계좌 복사 완료!</div>
+        <div class="modal-account">3333-11-6729871</div>
+        <div class="modal-copy-tag">✅ 계좌번호 복사됨</div>
+        <div class="modal-msg">
+          카카오뱅크 3333-11-6729871<br>
+          (예금주: 백**)<br><br>
+          소중한 후원 정말 감사드립니다! 🙏
+        </div>
+        <button class="modal-close-btn" onclick="closeBankModal()">확인</button>
+      </div>
+    </div>
+
+    <!-- 우선예약 확인 모달 -->
+    <div class="confirm-modal-overlay" id="confirmModal">
+      <div class="confirm-box">
+        <p>후원 완료 후<br><span>신청이 가능합니다.</span></p>
+        <div class="confirm-btn-group">
+          <button class="btn-cancel" onclick="closeConfirmModal()">돌아가기</button>
+          <button class="btn-confirm" onclick="executePrioritySubmit()">신청완료</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- ===== 위젯 끝 ===== -->
+
+  <footer>
+    <p class="ribbon">갑자TV 운영팀</p>
+    <p>소중한 후원과 예약, 진심으로 감사드려요.</p>
+  </footer>
+
+</div>
+
+<!-- ===== 갑자TV 후원 및 우선예약 위젯 스크립트 ===== -->
+<script>
+  // ── Google Apps Script URL ──
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbyyJuoBA7A-mzqmBHdV52HBYB21K__bWa_MMHPUDI1rMn7bpzO_uAJbAeBS8XPdhGOb/exec";
+  const PRIORITY_COOLDOWN_TIME = 1 * 60 * 1000; // 1분
+
+  // ── 배경 파티클 생성 ──
+  (function createParticles() {
+    const container = document.getElementById('bgParticles');
+    if (!container) return;
+    const count = 18;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 5 + 2;
+      p.style.cssText = `
+        width: ${size}px;
+        height: ${size}px;
+        left: ${Math.random() * 100}%;
+        animation-duration: ${Math.random() * 12 + 8}s;
+        animation-delay: ${Math.random() * 10}s;
+        opacity: 0;
+      `;
+      container.appendChild(p);
+    }
+  })();
+
+  // ── 캐릭터 이미지 터치/클릭 효과 (모바일) ──
+  const charImg = document.getElementById('charImg');
+  charImg.addEventListener('touchstart', () => {
+    charImg.classList.add('touched');
+  }, { passive: true });
+  charImg.addEventListener('touchend', () => {
+    setTimeout(() => charImg.classList.remove('touched'), 300);
+  });
+
+  // ── 쿨다운 체크 ──
+  function checkCooldown() {
+    const lastPrioritySubmit = localStorage.getItem('lastPrioritySubmitTime');
+    if (lastPrioritySubmit) {
+      const elapsed = Date.now() - parseInt(lastPrioritySubmit);
+      if (elapsed < PRIORITY_COOLDOWN_TIME) {
+        const pBtn = document.getElementById('prioritySubmitBtn');
+        pBtn.disabled = true;
+        document.getElementById('priorityCooldownMsg').style.display = 'block';
+        pBtn.innerText = "잠시 후 신청 가능";
+
+        const remaining = PRIORITY_COOLDOWN_TIME - elapsed;
+        setTimeout(() => {
+          pBtn.disabled = false;
+          pBtn.innerText = "🚀 우선예약 신청";
+          document.getElementById('priorityCooldownMsg').style.display = 'none';
+        }, remaining);
+      }
+    }
+  }
+
+  // ── 우선예약 모드 선택 처리 ──
+  function checkPriorityModeSelect() {
+    const sel = document.getElementById('priorityModeSelect');
+    if (sel.value === "채팅(알림)") {
+      window.open('https://gapjatv.github.io/chat/', '_blank');
+      sel.value = "";
+    }
+  }
+
+  // ── 유튜브 멤버십 모달 ──
+  function openYoutubeModal() {
+    document.getElementById('youtubeModal').classList.add('open');
+  }
+  function closeYoutubeModal() {
+    document.getElementById('youtubeModal').classList.remove('open');
+  }
+  function goToYoutube() {
+    window.open('https://www.youtube.com/channel/UCXJFVjOu5LhQSmyYoMfAZHA/join', '_blank');
+    closeYoutubeModal();
+  }
+  document.getElementById('youtubeModal').addEventListener('click', function(e) {
+    if (e.target === this) closeYoutubeModal();
+  });
+
+  // ── 계좌 복사 모달 ──
+  function openBankModal() {
+    const accountNumber = "3333-11-6729871";
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(accountNumber).catch(() => {
+        fallbackCopy(accountNumber);
+      });
+    } else {
+      fallbackCopy(accountNumber);
+    }
+    document.getElementById('bankModal').classList.add('open');
+  }
+
+  function fallbackCopy(text) {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+    document.body.appendChild(el);
+    el.focus();
+    el.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(el);
+  }
+
+  function closeBankModal() {
+    document.getElementById('bankModal').classList.remove('open');
+  }
+
+  document.getElementById('bankModal').addEventListener('click', function(e) {
+    if (e.target === this) closeBankModal();
+  });
+
+  // ── 우선예약 확인 모달 ──
+  function openConfirmModal() {
+    const name = document.getElementById('priorityNickname').value.trim();
+    const mode = document.getElementById('priorityModeSelect').value;
+    if (!name) { alert("게임 닉네임을 입력해주세요!"); return; }
+    if (!mode) { alert("모드를 선택해주세요!"); return; }
+    document.getElementById('confirmModal').classList.add('open');
+  }
+
+  function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.remove('open');
+  }
+
+  document.getElementById('confirmModal').addEventListener('click', function(e) {
+    if (e.target === this) closeConfirmModal();
+  });
+
+  // ── 우선예약 전송 ──
+  function executePrioritySubmit() {
+    closeConfirmModal();
+
+    const name = document.getElementById('priorityNickname').value.trim();
+    const mode = document.getElementById('priorityModeSelect').value;
+    const btn = document.getElementById('prioritySubmitBtn');
+
+    btn.disabled = true;
+    btn.innerText = "전송 중...";
+
+    const combinedNickname = name + " [우선예약-" + mode + "]";
+
+    fetch(GAS_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname: combinedNickname })
+    })
+    .then(() => {
+      localStorage.setItem('lastPrioritySubmitTime', Date.now());
+      document.getElementById('prioritySection').style.display = 'none';
+      document.getElementById('prioritySuccessSection').style.display = 'block';
+    })
+    .catch(() => {
+      alert("오류 발생! 다시 시도해주세요.");
+      btn.disabled = false;
+      btn.innerText = "🚀 우선예약 신청";
+    });
+  }
+
+  // ── 위젯 초기 상태로 리셋 (페이지 전체를 새로고침하지 않고 위젯만 초기화) ──
+  function resetPriorityWidget() {
+    document.getElementById('prioritySuccessSection').style.display = 'none';
+    document.getElementById('prioritySection').style.display = 'block';
+    document.getElementById('priorityNickname').value = '';
+    document.getElementById('priorityModeSelect').value = '';
+    const pBtn = document.getElementById('prioritySubmitBtn');
+    pBtn.disabled = false;
+    pBtn.innerText = "🚀 우선예약 신청";
+  }
+
+  // ── 초기화 ──
+  checkCooldown();
+</script>
+</body>
+</html>
