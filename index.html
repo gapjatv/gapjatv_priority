@@ -6,6 +6,15 @@
 <meta name="theme-color" content="#0E0C09">
 <title>갑자TV 우선예약</title>
 <link rel="icon" href="https://raw.githubusercontent.com/gapjatv/up/main/gapjamoney1.png">
+<!-- =====================================================================
+     ▼▼▼ 갑자TV 사이트 관제 연결 주소 ▼▼▼
+     Apps Script [배포] 후 받은 "웹 앱 URL"을 아래 따옴표 안에 붙여넣으세요.
+     (두 페이지 모두 같은 주소를 넣으면 돼요)
+     ===================================================================== -->
+<script>
+  const GAPJA_STATS_URL = "https://script.google.com/macros/s/AKfycbxzradI0qZGVKBMkMA3FY_MDPM8j8avOhqjA47LaBst9-cc5H5emKIH_fpksXivlbwZ/exec";
+</script>
+<!-- ▲▲▲ 연결 주소 끝 ▲▲▲ -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -698,6 +707,71 @@
 
   // ── 초기화 ──
   checkCooldown();
+</script>
+
+<!-- ===== 갑자TV 접속 기록 (Apps Script로 전송) ===== -->
+<script>
+  (function gapjaTrackVisit() {
+    if (typeof GAPJA_STATS_URL !== 'string' || GAPJA_STATS_URL.indexOf('https://script.google.com/') !== 0) return;
+
+    function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+    function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+    // 내 접속은 통계에서 빼기: 주소 뒤에 ?me=1 붙여서 한 번 접속 (되돌리기: ?me=0)
+    if (/[?&]me=1(&|$)/.test(location.search)) lsSet('gapja_me', '1');
+    if (/[?&]me=0(&|$)/.test(location.search)) lsDel('gapja_me');
+    if (lsGet('gapja_me') === '1') return;
+
+    // 방문자 구분 코드 (브라우저마다 랜덤 생성, 개인정보 아님)
+    let vid = lsGet('gapja_vid');
+    let first = '0';
+    if (!vid) {
+      vid = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      lsSet('gapja_vid', vid);
+      first = '1';
+    }
+
+    const dev = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? '모바일' : 'PC';
+
+    // 유입 경로
+    let ref = '직접 접속';
+    try {
+      if (document.referrer) {
+        const h = new URL(document.referrer).hostname.replace(/^www\./, '').replace(/^m\./, '');
+        if (h === location.hostname) ref = '사이트 내부';
+        else if (/youtube\.com|youtu\.be/.test(h)) ref = '유튜브';
+        else if (/google\./.test(h)) ref = '구글';
+        else if (/naver\./.test(h)) ref = '네이버';
+        else if (/kakao|daum/.test(h)) ref = '카카오/다음';
+        else if (/instagram/.test(h)) ref = '인스타그램';
+        else if (/discord/.test(h)) ref = '디스코드';
+        else ref = h;
+      }
+    } catch (e) {}
+
+    function send(ip) {
+      const q = new URLSearchParams({
+        action: 'hit', page: 'priority', vid: vid, dev: dev, ref: ref, ip: ip || '', first: first
+      });
+      fetch(GAPJA_STATS_URL + '?' + q.toString(), { mode: 'no-cors', keepalive: true }).catch(function () {});
+    }
+
+    // IP는 앞자리만 남기고 뒷자리는 가려서 전송 (예: 211.234.*.*)
+    function maskIp(ip) {
+      if (!ip) return '';
+      if (ip.indexOf('.') > -1) { const a = ip.split('.'); return a[0] + '.' + a[1] + '.*.*'; }
+      if (ip.indexOf(':') > -1) { const b = ip.split(':'); return b[0] + ':' + b[1] + ':*'; }
+      return '';
+    }
+
+    let done = false;
+    const timer = setTimeout(function () { if (!done) { done = true; send(''); } }, 3000);
+    fetch('https://api.ipify.org?format=json')
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (!done) { done = true; clearTimeout(timer); send(maskIp(d && d.ip)); } })
+      .catch(function () { if (!done) { done = true; clearTimeout(timer); send(''); } });
+  })();
 </script>
 </body>
 </html>
